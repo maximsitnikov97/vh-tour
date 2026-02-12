@@ -10,6 +10,7 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     CallbackQueryHandler,
+    ChatMemberHandler,
     ContextTypes,
     filters,
 )
@@ -23,6 +24,9 @@ from db import (
     get_user_booking,
     create_booking,
     cancel_user_booking,
+    upsert_subscriber,
+    update_subscriber_phone,
+    update_subscriber_status,
 )
 from helpers import format_day, decline_places, validate_phone, validate_name
 from logger import setup_logging
@@ -45,6 +49,8 @@ MAIN_MENU = ReplyKeyboardMarkup(
 # ===== /start =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
+    user = update.effective_user
+    upsert_subscriber(user.id, user.username, user.first_name, user.last_name)
     await update.message.reply_text(
         "🌷 Добро пожаловать в Верёвкин Хутор!\n\n"
         "Запишитесь на бесплатную экскурсию 👇",
@@ -183,6 +189,8 @@ async def phone_entered(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    update_subscriber_phone(user_id, phone)
+
     logger.info(
         "Booking created: user=%s name=%s persons=%d date=%s time=%s phone=%s",
         user_id, name, persons, day_date, slot_time, phone,
@@ -286,6 +294,18 @@ async def send_route_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=keyboard,
     )
 
+# ===== отслеживание блокировки/разблокировки бота =====
+async def track_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    result = update.my_chat_member
+    if result is None:
+        return
+    user_id = result.from_user.id
+    new_status = result.new_chat_member.status
+    if new_status == "member":
+        update_subscriber_status(user_id, "active")
+    elif new_status == "kicked":
+        update_subscriber_status(user_id, "left")
+
 # ====== post_init ======
 async def post_init(application):
     setup_scheduler(application)
@@ -318,8 +338,10 @@ def main():
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_input_router))
 
+    app.add_handler(ChatMemberHandler(track_chat_member, ChatMemberHandler.MY_CHAT_MEMBER))
+
     logger.info("Bot is running...")
-    app.run_polling(drop_pending_updates=True)
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":

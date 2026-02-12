@@ -8,7 +8,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 
 from config import ADMIN_PASSWORD, BOT_TOKEN
-from db import get_stats, get_bookings_by_date, get_booking_by_id, cancel_booking_by_id
+from db import get_stats, get_bookings_by_date, get_booking_by_id, cancel_booking_by_id, get_subscribers
 from helpers import format_day
 
 logger = logging.getLogger("excursion_bot")
@@ -90,3 +90,24 @@ async def cancel_booking(booking_id: int, username: str = Depends(verify_admin))
         logger.error("Failed to notify user %s about cancellation: %s", user_id, e)
 
     return RedirectResponse(url=f"/date/{booking['date']}", status_code=303)
+
+
+@app.get("/subscribers", response_class=HTMLResponse)
+async def subscribers_view(request: Request, filter: str = "all", username: str = Depends(verify_admin)):
+    rows = get_subscribers(filter)
+    subs = []
+    for s in rows:
+        subs.append({
+            "first_name": s["first_name"] or "",
+            "last_name": s["last_name"] or "",
+            "username": s["username"] or "",
+            "phone": s["phone"] or "—",
+            "status": s["status"],
+            "created_at": s["created_at"][:10] if s["created_at"] else "",
+        })
+    return templates.TemplateResponse("subscribers.html", {
+        "request": request,
+        "subscribers": subs,
+        "total": len(subs),
+        "current_filter": filter,
+    })

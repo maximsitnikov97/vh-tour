@@ -63,6 +63,19 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_bookings_time_slot_id
             ON bookings(time_slot_id)
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subscribers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_user_id INTEGER NOT NULL UNIQUE,
+                username TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                phone TEXT,
+                status TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
         # Drop legacy table if exists
         cur.execute("DROP TABLE IF EXISTS slots")
         conn.commit()
@@ -259,3 +272,57 @@ def mark_reminder_sent(booking_id: int):
     with get_db() as conn:
         conn.execute("UPDATE bookings SET reminder_sent = 1 WHERE id = ?", (booking_id,))
         conn.commit()
+
+
+# ── Subscriber queries ──
+
+def upsert_subscriber(user_id: int, username: str | None, first_name: str | None, last_name: str | None):
+    now = datetime.now().isoformat()
+    with get_db() as conn:
+        conn.execute("""
+            INSERT INTO subscribers (telegram_user_id, username, first_name, last_name, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, 'active', ?, ?)
+            ON CONFLICT(telegram_user_id) DO UPDATE SET
+                username = excluded.username,
+                first_name = excluded.first_name,
+                last_name = excluded.last_name,
+                status = 'active',
+                updated_at = excluded.updated_at
+        """, (user_id, username, first_name, last_name, now, now))
+        conn.commit()
+
+
+def update_subscriber_phone(user_id: int, phone: str):
+    now = datetime.now().isoformat()
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE subscribers SET phone = ?, updated_at = ? WHERE telegram_user_id = ?",
+            (phone, now, user_id),
+        )
+        conn.commit()
+
+
+def update_subscriber_status(user_id: int, status: str):
+    now = datetime.now().isoformat()
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE subscribers SET status = ?, updated_at = ? WHERE telegram_user_id = ?",
+            (status, now, user_id),
+        )
+        conn.commit()
+
+
+def get_subscribers(filter_type: str = "all"):
+    with get_db() as conn:
+        if filter_type == "active":
+            return conn.execute(
+                "SELECT * FROM subscribers WHERE status = 'active' ORDER BY created_at DESC"
+            ).fetchall()
+        elif filter_type == "with_phone":
+            return conn.execute(
+                "SELECT * FROM subscribers WHERE phone IS NOT NULL AND phone != '' ORDER BY created_at DESC"
+            ).fetchall()
+        else:
+            return conn.execute(
+                "SELECT * FROM subscribers ORDER BY created_at DESC"
+            ).fetchall()

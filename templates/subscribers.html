@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Подписчики</h1>
+
+<div class="filter-bar">
+    <a href="/subscribers?filter=all" class="{% if current_filter == 'all' %}active{% endif %}">Все</a>
+    <a href="/subscribers?filter=active" class="{% if current_filter == 'active' %}active{% endif %}">Активные</a>
+    <a href="/subscribers?filter=with_phone" class="{% if current_filter == 'with_phone' %}active{% endif %}">С номерами</a>
+</div>
+
+{% if not subscribers %}
+<p>Подписчиков нет.</p>
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th>Имя</th>
+            <th>Username</th>
+            <th>Телефон</th>
+            <th>Статус</th>
+            <th>Дата входа</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in subscribers %}
+        <tr>
+            <td>{{ s.first_name }} {{ s.last_name }}</td>
+            <td>{% if s.username %}@{{ s.username }}{% else %}—{% endif %}</td>
+            <td>{{ s.phone }}</td>
+            <td>
+                {% if s.status == 'active' %}
+                <span class="status-badge status-active">active</span>
+                {% else %}
+                <span class="status-badge status-left">left</span>
+                {% endif %}
+            </td>
+            <td>{{ s.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+<p class="total">Всего: {{ total }}</p>
+{% endblock %}
