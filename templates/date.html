@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/" class="back">&laquo; Назад</a>
+<h1>{{ date_fmt }}</h1>
+
+{% if not bookings %}
+<p>Записей нет.</p>
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th>Время</th>
+            <th>Имя</th>
+            <th>Чел.</th>
+            <th>Телефон</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for b in bookings %}
+        <tr>
+            <td>{{ b.time }}</td>
+            <td>{{ b.name }}</td>
+            <td>{{ b.persons }}</td>
+            <td>{{ b.phone }}</td>
+            <td>
+                <form method="post" action="/cancel/{{ b.id }}" onsubmit="return confirm('Отменить запись {{ b.name }}?')">
+                    <button type="submit" class="btn-cancel">Отменить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="total">Всего: {{ total }} чел.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Верёвкин Хутор — Записи</h1>
+
+{% if not dates %}
+<p>Нет предстоящих дат.</p>
+{% endif %}
+
+{% for d in dates %}
+<a href="/date/{{ d.date }}" class="card" style="display: block;">
+    <strong>{{ d.date_fmt }}</strong> — {{ d.booked }} / {{ d.capacity }} чел. ({{ d.pct }}%)
+    <div class="bar"><div class="bar-fill" style="width: {{ d.pct }}%"></div></div>
+</a>
+{% endfor %}
+{% endblock %}

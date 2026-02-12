@@ -1,0 +1,55 @@
+"""
+DEPRECATED: This standalone reminder script is replaced by the built-in
+scheduler in bot.py (see scheduler.py). Kept as a cron fallback.
+
+Usage (if scheduler is not running):
+    python reminder.py
+"""
+
+import logging
+from datetime import datetime, timedelta
+
+from telegram import Bot
+
+from config import BOT_TOKEN
+from db import get_pending_reminders, mark_reminder_sent
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
+
+bot = Bot(token=BOT_TOKEN)
+
+
+def main():
+    now = datetime.now()
+    from_dt = (now + timedelta(hours=23)).strftime("%Y-%m-%d %H:%M")
+    to_dt = (now + timedelta(hours=25)).strftime("%Y-%m-%d %H:%M")
+
+    rows = get_pending_reminders(from_dt, to_dt)
+
+    for r in rows:
+        text = (
+            "⏰ Напоминание о записи\n\n"
+            "Завтра у вас экскурсия в теплицы «Верёвкин Хутор» 🌷\n\n"
+            f"📅 Дата: {r['date']}\n"
+            f"🕘 Время: {r['time']}\n"
+            f"👥 Количество человек: {r['persons']}\n\n"
+            "📍 Адрес:\n"
+            "Симферопольский р-н, с. Молодёжное,\n"
+            "Московское ш., 11-й км, КрымТеплица\n\n"
+            "🗺 Яндекс Карты:\n"
+            "https://yandex.ru/maps/-/CPE3zSma\n\n"
+            "⚠️ Просим приходить вовремя.\n"
+            "При опоздании более 15 минут вход может быть ограничен."
+        )
+
+        try:
+            bot.send_message(chat_id=r["telegram_user_id"], text=text)
+            mark_reminder_sent(r["id"])
+            logger.info("Reminder sent to user=%s booking=%s", r["telegram_user_id"], r["id"])
+        except Exception as e:
+            logger.error("Failed to send reminder to user=%s: %s", r["telegram_user_id"], e)
+
+
+if __name__ == "__main__":
+    main()
