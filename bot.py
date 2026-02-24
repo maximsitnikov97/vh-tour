@@ -68,11 +68,16 @@ async def start_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("1", callback_data="persons_1"),
-        InlineKeyboardButton("2", callback_data="persons_2"),
-        InlineKeyboardButton("3", callback_data="persons_3"),
-    ]])
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("1", callback_data="persons_1"),
+            InlineKeyboardButton("2", callback_data="persons_2"),
+            InlineKeyboardButton("3", callback_data="persons_3"),
+        ],
+        [
+            InlineKeyboardButton("10+", callback_data="persons_10"),
+        ],
+    ])
     await update.message.reply_text(
         "👥 Сколько человек придёт на экскурсию?",
         reply_markup=keyboard,
