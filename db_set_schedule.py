@@ -13,8 +13,10 @@ from config import DB_PATH
 
 CAPACITY_PER_EXCURSION = 30
 
-# Будни (пн–пт): только 15:00
+# Пн–чт: только 15:00
 WEEKDAY_TIMES = ["15:00"]
+# Пятница: 09:00 и 15:00
+FRIDAY_TIMES = ["09:00", "15:00"]
 # Выходные (сб–вс): 09:00 и 15:00
 WEEKEND_TIMES = ["09:00", "15:00"]
 
@@ -61,7 +63,12 @@ def main():
     schedule_rules = []
     for ymd in daterange("2026-02-16", "2026-03-03"):
         d = date.fromisoformat(ymd)
-        times = WEEKEND_TIMES if d.weekday() >= 5 else WEEKDAY_TIMES
+        if d.weekday() >= 5:
+            times = WEEKEND_TIMES
+        elif d.weekday() == 4:
+            times = FRIDAY_TIMES
+        else:
+            times = WEEKDAY_TIMES
         schedule_rules.append((ymd, times))
 
     # Insert days + time_slots
