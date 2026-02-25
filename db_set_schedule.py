@@ -13,6 +13,11 @@ from config import DB_PATH
 
 CAPACITY_PER_EXCURSION = 30
 
+# Будни (пн–пт): только 15:00
+WEEKDAY_TIMES = ["15:00"]
+# Выходные (сб–вс): 09:00 и 15:00
+WEEKEND_TIMES = ["09:00", "15:00"]
+
 
 def daterange(start_ymd: str, end_ymd: str):
     y1, m1, d1 = map(int, start_ymd.split("-"))
@@ -52,30 +57,12 @@ def main():
     cursor.execute("DELETE FROM days")
     conn.commit()
 
-    # Schedule rules
+    # Schedule rules: будни — 15:00, выходные — 09:00 и 15:00
     schedule_rules = []
-
-    # 16–20 февраля: 11:00, 13:00, 15:00
-    times_3 = ["11:00", "13:00", "15:00"]
-    for ymd in daterange("2026-02-16", "2026-02-20"):
-        schedule_rules.append((ymd, times_3))
-
-    # 21 и 23 февраля: 9:00, 11:00, 13:00, 15:00
-    times_4 = ["09:00", "11:00", "13:00", "15:00"]
-    schedule_rules.append(("2026-02-21", times_4))
-    schedule_rules.append(("2026-02-23", times_4))
-
-    # 24–27 февраля: 11:00, 13:00, 15:00
-    for ymd in daterange("2026-02-24", "2026-02-27"):
-        schedule_rules.append((ymd, times_3))
-
-    # 28 февраля и 01 марта: 9:00, 11:00, 13:00, 15:00
-    schedule_rules.append(("2026-02-28", times_4))
-    schedule_rules.append(("2026-03-01", times_4))
-
-    # 02 и 03 марта: 11:00, 13:00, 15:00
-    schedule_rules.append(("2026-03-02", times_3))
-    schedule_rules.append(("2026-03-03", times_3))
+    for ymd in daterange("2026-02-16", "2026-03-03"):
+        d = date.fromisoformat(ymd)
+        times = WEEKEND_TIMES if d.weekday() >= 5 else WEEKDAY_TIMES
+        schedule_rules.append((ymd, times))
 
     # Insert days + time_slots
     for ymd, times in schedule_rules:
