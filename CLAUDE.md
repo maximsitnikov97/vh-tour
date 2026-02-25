@@ -7,6 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Пиши и думай на Русском языке
 - Доступ к серверу где размещен проект ssh root@194.87.250.87 (ключ уже настроен на этом Mac)
 
+## Документация
+
+- `docs/OVERVIEW.md` — архитектура, фичи, схема БД, деплой
+- `docs/API.md` — эндпоинты веб-админки
+- При значимых изменениях запускай `/docs` для обновления документации
+
 ## Обзор проекта
 
 Telegram-бот для записи на бесплатные экскурсии в «Верёвкин Хутор» (теплицы, Крым). Python + `python-telegram-bot` v22.5. БД — SQLite с WAL-режимом. Веб-админка — FastAPI. Docker-ready.
