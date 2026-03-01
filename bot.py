@@ -31,7 +31,7 @@ from db import (
 from helpers import format_day, decline_places, validate_phone, validate_name
 from logger import setup_logging
 from admin import admin_command, admin_callback
-from scheduler import setup_scheduler
+# from scheduler import setup_scheduler  # отключено: напоминания показывали неверное время
 
 logger = setup_logging()
 
@@ -74,9 +74,6 @@ async def start_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("2", callback_data="persons_2"),
             InlineKeyboardButton("3", callback_data="persons_3"),
         ],
-        [
-            InlineKeyboardButton("10+", callback_data="persons_10"),
-        ],
     ])
     await update.message.reply_text(
         "👥 Сколько человек придёт на экскурсию?",
@@ -105,7 +102,8 @@ async def persons_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         ])
     await q.edit_message_text(
-        "📅 Выберите дату:",
+        "📅 Выберите дату:\n\n"
+        "ℹ️ Если бот не показывает время для записи — места закончились.",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
 
@@ -132,7 +130,8 @@ async def day_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         ])
     await q.edit_message_text(
-        "🕒 Выберите время:",
+        "🕒 Выберите время:\n\n"
+        "ℹ️ Если бот не показывает время для записи — места закончились.",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
 
@@ -206,7 +205,7 @@ async def phone_entered(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "✅ Запись подтверждена!\n\n"
         f"👤 {name}\n"
         f"📞 {phone}\n"
-        f"👥 {persons} человек\n"
+        f"👥 {'10+' if persons >= 10 else persons} человек\n"
         f"📅 Дата: {format_day(day_date)}\n"
         f"🕒 Время: {slot_time}\n\n"
         "Кнопки «Как проехать» и «Важная информация» доступны в меню ⬇️",
@@ -235,7 +234,7 @@ async def my_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📄 Моя запись\n\n"
         f"👤 Имя: {booking['name']}\n"
         f"{phone_line}"
-        f"👥 Количество: {booking['persons']}\n"
+        f"👥 Количество: {'10+' if booking['persons'] >= 10 else booking['persons']}\n"
         f"📅 Дата: {format_day(booking['date'])}\n"
         f"🕒 Время: {booking['time']}",
         reply_markup=MAIN_MENU,
@@ -342,7 +341,7 @@ async def track_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ====== post_init ======
 async def post_init(application):
-    setup_scheduler(application)
+    pass  # scheduler отключён
 
 # ====== main ======
 def main():
