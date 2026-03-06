@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Рассылка</h1>
+
+<form method="post" action="/broadcast" enctype="multipart/form-data" class="card">
+    <div style="margin-bottom: 14px;">
+        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Текст сообщения *</label>
+        <textarea name="text" required rows="6"
+            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95em; resize: vertical; font-family: inherit;"
+            placeholder="Текст рассылки..."></textarea>
+    </div>
+
+    <div style="margin-bottom: 14px;">
+        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Картинка (необязательно)</label>
+        <input type="file" name="image" accept="image/*"
+            style="font-size: 0.9em;">
+    </div>
+
+    <div style="margin-bottom: 14px;">
+        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Кнопка (необязательно)</label>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" name="button_text" placeholder="Текст кнопки"
+                style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+            <input type="url" name="button_url" placeholder="https://..."
+                style="flex: 2; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+        </div>
+    </div>
+
+    <div style="margin-bottom: 14px;">
+        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Когда отправить</label>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <label style="cursor: pointer;">
+                <input type="radio" name="send_mode" value="now" checked onchange="document.getElementById('schedule-input').style.display='none'"> Сейчас
+            </label>
+            <label style="cursor: pointer;">
+                <input type="radio" name="send_mode" value="scheduled" onchange="document.getElementById('schedule-input').style.display='flex'"> Запланировать
+            </label>
+            <div id="schedule-input" style="display: none; align-items: center; gap: 6px;">
+                <input type="datetime-local" name="scheduled_at"
+                    style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+                <span style="font-size: 0.85em; color: #6b7280;">(МСК)</span>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit"
+        style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600;">
+        Отправить
+    </button>
+</form>
+
+<div style="margin-top: 12px;">
+    <a href="/broadcast/history">История рассылок &rarr;</a>
+</div>
+{% endblock %}

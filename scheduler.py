@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from db import get_pending_reminders, mark_reminder_sent
+from db import get_pending_reminders, mark_reminder_sent, claim_pending_broadcasts
+from broadcast_sender import send_broadcast
 
 logger = logging.getLogger("excursion_bot")
 
@@ -39,6 +40,13 @@ async def send_reminders(bot):
             logger.error("Failed to send reminder to user=%s: %s", r["telegram_user_id"], e)
 
 
+async def process_scheduled_broadcasts():
+    rows = claim_pending_broadcasts()
+    for b in rows:
+        logger.info("Starting scheduled broadcast #%s", b["id"])
+        await send_broadcast(b["id"])
+
+
 def setup_scheduler(application):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
@@ -48,5 +56,11 @@ def setup_scheduler(application):
         args=[application.bot],
         id="send_reminders",
     )
+    scheduler.add_job(
+        process_scheduled_broadcasts,
+        "interval",
+        minutes=1,
+        id="process_broadcasts",
+    )
     scheduler.start()
-    logger.info("Scheduler started (reminders every 30 min)")
+    logger.info("Scheduler started (reminders every 30 min, broadcasts every 1 min)")

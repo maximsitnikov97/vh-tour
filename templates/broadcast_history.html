@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>История рассылок</h1>
+
+<div style="margin-bottom: 12px;">
+    <a href="/broadcast">&larr; Новая рассылка</a>
+</div>
+
+{% if broadcasts %}
+<div class="card" style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Текст</th>
+                <th>Фото</th>
+                <th>Кнопка</th>
+                <th>Статус</th>
+                <th>Отправлено</th>
+                <th>Результат</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in broadcasts %}
+            <tr>
+                <td>{{ b.id }}</td>
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.text }}</td>
+                <td>{% if b.has_image %}да{% else %}—{% endif %}</td>
+                <td>{% if b.has_button %}да{% else %}—{% endif %}</td>
+                <td>
+                    {% if b.status == 'completed' %}
+                        <span class="status-badge status-active">завершена</span>
+                    {% elif b.status == 'sending' %}
+                        <span class="status-badge" style="background: #fef3c7; color: #92400e;">отправка...</span>
+                    {% elif b.status == 'scheduled' %}
+                        <span class="status-badge" style="background: #dbeafe; color: #1e40af;">{{ b.scheduled_at }}</span>
+                    {% elif b.status == 'pending' %}
+                        <span class="status-badge" style="background: #fef3c7; color: #92400e;">ожидает</span>
+                    {% else %}
+                        <span class="status-badge status-left">{{ b.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ b.completed_at[:16] if b.completed_at else "—" }}</td>
+                <td>{{ b.success }}/{{ b.total }}{% if b.failed %} <span style="color: #ef4444;">({{ b.failed }} ош.)</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>Рассылок пока нет.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -31,7 +31,7 @@ from db import (
 from helpers import format_day, decline_places, validate_phone, validate_name
 from logger import setup_logging
 from admin import admin_command, admin_callback
-# from scheduler import setup_scheduler  # отключено: напоминания показывали неверное время
+from scheduler import setup_scheduler
 
 logger = setup_logging()
 
@@ -341,7 +341,7 @@ async def track_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ====== post_init ======
 async def post_init(application):
-    pass  # scheduler отключён
+    setup_scheduler(application)
 
 # ====== main ======
 def main():
