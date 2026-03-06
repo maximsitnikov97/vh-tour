@@ -15,7 +15,7 @@ from db import (
     get_stats, get_bookings_by_date, get_booking_by_id, cancel_booking_by_id,
     get_subscribers, create_broadcast, get_broadcast_history, _utc_to_msk,
 )
-from broadcast_sender import send_broadcast
+from broadcast_sender import send_broadcast, send_test_message
 from helpers import format_day
 
 logger = logging.getLogger("excursion_bot")
@@ -179,6 +179,54 @@ async def broadcast_create(
         logger.info("Broadcast #%s scheduled at %s", broadcast_id, schedule_dt)
 
     return RedirectResponse(url="/broadcast/history", status_code=303)
+
+
+@app.post("/broadcast/test")
+async def broadcast_test(
+    request: Request,
+    text: str = Form(...),
+    button_text: str = Form(""),
+    button_url: str = Form(""),
+    test_user_id: str = Form(...),
+    image: UploadFile = File(None),
+    username: str = Depends(verify_admin),
+):
+    # Save image if provided
+    image_path = None
+    if image and image.filename:
+        os.makedirs(BROADCAST_UPLOAD_DIR, exist_ok=True)
+        filename = f"{uuid.uuid4().hex}.jpg"
+        image_path = os.path.join(BROADCAST_UPLOAD_DIR, filename)
+        content = await image.read()
+
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(content))
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        max_side = 2000
+        if img.width > max_side or img.height > max_side:
+            img.thumbnail((max_side, max_side), Image.LANCZOS)
+        img.save(image_path, "JPEG", quality=90)
+
+    try:
+        uid = int(test_user_id.strip())
+    except ValueError:
+        return templates.TemplateResponse("broadcast.html", {
+            "request": request, "error": "Некорректный User ID",
+        })
+
+    btn_text = button_text.strip() or None
+    btn_url = button_url.strip() or None
+
+    ok, err = await send_test_message(text, image_path, btn_text, btn_url, uid)
+    if ok:
+        return templates.TemplateResponse("broadcast.html", {
+            "request": request, "success": f"Тест отправлен пользователю {uid}",
+        })
+    return templates.TemplateResponse("broadcast.html", {
+        "request": request, "error": f"Ошибка отправки: {err}",
+    })
 
 
 @app.get("/broadcast/history", response_class=HTMLResponse)

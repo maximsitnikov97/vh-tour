@@ -2,7 +2,14 @@
 {% block content %}
 <h1>Рассылка</h1>
 
-<form method="post" action="/broadcast" enctype="multipart/form-data" class="card">
+{% if success %}
+<div style="background: #dcfce7; color: #166534; padding: 10px 16px; border-radius: 6px; margin-bottom: 12px;">{{ success }}</div>
+{% endif %}
+{% if error %}
+<div style="background: #fee2e2; color: #991b1b; padding: 10px 16px; border-radius: 6px; margin-bottom: 12px;">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="/broadcast" enctype="multipart/form-data" class="card" id="broadcast-form">
     <div style="margin-bottom: 14px;">
         <label style="font-weight: 600; display: block; margin-bottom: 6px;">Текст сообщения *</label>
         <textarea name="text" required rows="6"
@@ -43,11 +50,33 @@
         </div>
     </div>
 
-    <button type="submit"
-        style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600;">
-        Отправить
-    </button>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="submit"
+            style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600;">
+            Отправить всем
+        </button>
+
+        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+            <input type="text" name="test_user_id" id="test-uid" placeholder="User ID"
+                style="width: 140px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em;">
+            <button type="button" onclick="sendTest()"
+                style="background: #6b7280; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
+                Тест
+            </button>
+        </div>
+    </div>
 </form>
+
+<script>
+function sendTest() {
+    var form = document.getElementById('broadcast-form');
+    var uid = document.getElementById('test-uid').value.trim();
+    if (!uid) { alert('Введите User ID'); return; }
+    form.action = '/broadcast/test';
+    form.submit();
+    form.action = '/broadcast';
+}
+</script>
 
 <div style="margin-top: 12px;">
     <a href="/broadcast/history">История рассылок &rarr;</a>

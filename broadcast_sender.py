@@ -97,6 +97,30 @@ async def _send_to_user(client: httpx.AsyncClient, broadcast, user_id: int,
     return False
 
 
+async def send_test_message(text: str, image_path: str | None,
+                            button_text: str | None, button_url: str | None,
+                            user_id: int) -> tuple[bool, str]:
+    """Send a single test message. Returns (success, error_text)."""
+    reply_markup = None
+    if button_text and button_url:
+        reply_markup = {
+            "inline_keyboard": [[{"text": button_text, "url": button_url}]]
+        }
+    broadcast = {"text": text, "image_path": image_path}
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            if image_path:
+                ok, _ = await _send_photo(client, broadcast, user_id, reply_markup)
+            else:
+                ok, _ = await _send_message(client, broadcast, user_id, reply_markup)
+            if ok:
+                return True, ""
+            return False, "Telegram API отклонил запрос"
+        except Exception as e:
+            return False, str(e)
+
+
 async def _send_message(client: httpx.AsyncClient, broadcast, user_id: int,
                         reply_markup: dict | None) -> tuple[bool, bool]:
     payload = {"chat_id": user_id, "text": broadcast["text"]}
